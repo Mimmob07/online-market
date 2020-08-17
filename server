@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+import subprocess
+import socket
+import time
+import os
+from easygui import *
+from tkinter import messagebox
+import ast
+
+f = open("/Users/mimmo/black_market/orders.txt", "r")
+contents = f.read()
+f.close()
+stuff = contents.split('}', 1)
+print(stuff)
+
+host = subprocess.check_output("ipconfig getifaddr en0", shell=True).decode().strip()
+port = 4200
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind((host,port))
+print("[\u001b[32m✔︎\u001b[0m]      Sockets bound")
+time.sleep(0.5)
+s.listen()
+print("[\u001b[32m✔︎\u001b[0m]      Server successfuly started running on ip: " + host + ":" + str(port))
+time.sleep(0.5)
+print("[\u001b[32m✔︎\u001b[0m]      Server is running")
+def notify(title, subtitle, message):
+    t = '-title {!r}'.format(title)
+    s = '-subtitle {!r}'.format(subtitle)
+    m = '-message {!r}'.format(message)
+    os.system('terminal-notifier {} -open "file:///users/mimmo/black_market/orders.txt"'.format(' '.join([m, t, s])))
+
+while True:
+    try:
+        conn,addr = s.accept()
+        msg1 = conn.recv(1024).decode('utf8')
+        f = open("/Users/mimmo/black_market/orders.txt", "r")
+        contents = f.read()
+        f.close()
+        stuff = contents.split('}', 1)
+        f = open("/Users/mimmo/black_market/orders.txt", "r")
+        ogcon = f.read()
+        f.close()
+        f = open("/Users/mimmo/black_market/orders.txt", "w")
+        for element in stuff:
+            f.write(element)
+        f.write(msg1)
+        f.close()
+        f = open("/Users/mimmo/black_market/orders.txt", "r")
+        nextcon = f.read()
+        f.close()
+        if ogcon == nextcon:
+            pass
+        else:
+            notify(title = 'Confrimation',
+                subtitle = '',
+                message  = 'order has come through')
+        conn.close()
+    except KeyboardInterrupt:
+        print("bye :)")
+        exit()
